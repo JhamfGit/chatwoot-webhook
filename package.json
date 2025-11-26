@@ -1,0 +1,16 @@
+{
+  "name": "chatwoot-webhook",
+  "version": "1.0.0",
+  "description": "Webhook para automatizar asignación de equipos en Chatwoot",
+  "main": "chatwoot-webhook.js",
+  "scripts": {
+    "start": "node chatwoot-webhook.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
