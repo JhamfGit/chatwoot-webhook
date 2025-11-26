@@ -59,7 +59,7 @@ Por favor, selecciona tu EPS para una atención personalizada:
 4️⃣ Salud Total
 5️⃣ Otro / Particular
 
-⏳ Un profesional especializado te atenderá muy pronto.`;
+⏳ Uno de nuestros agentes te atenderá muy pronto.`;
 
   await axios.post(
     `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
@@ -99,7 +99,7 @@ async function assignToTeam(data) {
       // 3. Confirmar asignación
       await axios.post(
         `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
-        { content: `✅ Te hemos conectado con nuestro equipo de ${team.name}. Enseguida te atenderán.` },
+        { content: `✅ Te hemos conectado con nuestro equipo de ${team.name}. Espera un momento mientras te asiganamos un agente.` },
         { headers: { 'api_access_token': API_KEY } }
       );
       
