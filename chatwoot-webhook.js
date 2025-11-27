@@ -73,20 +73,37 @@ async function assignToTeam(data) {
   const conversationId = data.conversation.id;
   const content = data.content?.trim();
 
-  // 🔵 1. SI YA TIENE EQUIPO ASIGNADO → NO VOLVER A PEDIR NÚMERO
-  if (data.conversation.team_id) {
-    console.log(`🔵 Conversación ${conversationId} ya asignada. No se solicita número nuevamente.`);
+  // ------------------------------
+  // 1. CONSULTAR ESTADO REAL DE LA CONVERSACIÓN
+  // ------------------------------
+  let conversation;
+  try {
+    const response = await axios.get(
+      `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}`,
+      { headers: { 'api_access_token': API_KEY } }
+    );
+    conversation = response.data;
+  } catch (error) {
+    console.error("❌ Error obteniendo conversación", error.response?.data || error.message);
     return;
   }
 
-  // Buscar el número en el mensaje (1-5)
+  // SI YA ESTÁ ASIGNADA → NO HACER NADA
+  if (conversation.team_id) {
+    console.log(`🔵 Conversación ${conversationId} ya asignada al equipo ${conversation.team_id}.`);
+    return;
+  }
+
+  // Buscar número válido 1–5
   const option = content?.match(/^[1-5]$/)?.[0];
 
-  // 🔴 2. SI EL NÚMERO NO ES VÁLIDO → ENVIAR MENSAJE DE REINTENTO
+  // ------------------------------
+  // 2. SI EL NÚMERO ES INVÁLIDO → VOLVER A MOSTRAR MENÚ
+  // ------------------------------
   if (!option) {
     await axios.post(
       `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
-      { 
+      {
         content: `⚠️ Por favor selecciona una opción válida respondiendo SOLO con un número del 1 al 5:
 
 1️⃣ Comfenalco  
@@ -97,45 +114,46 @@ async function assignToTeam(data) {
       },
       { headers: { 'api_access_token': API_KEY } }
     );
-
-    console.log(`❗ Opción inválida: "${content}" en conversación ${conversationId}`);
-    return; // 🔥 No continuar hasta que digite un número válido
+    return;
   }
 
-  // Si la opción es válida y existe dentro del mapa
+  // ------------------------------
+  // 3. SI EL NÚMERO ES CORRECTO → ASIGNAR EQUIPO
+  // ------------------------------
   if (EPS_TEAMS[option]) {
     const team = EPS_TEAMS[option];
 
-    console.log(`🎯 Asignando conversación ${conversationId} a ${team.name}`);
-
     try {
-      // 1. Asignar equipo
+      // Asignar equipo
       await axios.post(
         `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/assignments`,
         { team_id: team.teamId },
         { headers: { 'api_access_token': API_KEY } }
       );
 
-      // 2. Agregar etiqueta
+      // Etiqueta
       await axios.post(
         `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/labels`,
         { labels: [team.label] },
         { headers: { 'api_access_token': API_KEY } }
       );
 
-      // 3. Confirmar asignación
+      // Confirmar
       await axios.post(
         `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
-        { content: `✅ Te hemos conectado con nuestro equipo de ${team.name}. Un agente te atenderá pronto.` },
+        {
+          content: `✅ Te hemos conectado con nuestro equipo de ${team.name}. Un agente te atenderá pronto.`
+        },
         { headers: { 'api_access_token': API_KEY } }
       );
 
-      console.log(`✅ Asignado exitosamente a ${team.name}`);
+      console.log(`🎯 Conversación ${conversationId} asignada a ${team.name}`);
     } catch (error) {
-      console.error('❌ Error al asignar:', error.response?.data || error.message);
+      console.error("❌ Error asignando equipo:", error.response?.data || error.message);
     }
   }
 }
+
 
 
 // Mensaje de cierre
