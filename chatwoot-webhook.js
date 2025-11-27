@@ -94,7 +94,7 @@ async function assignToTeam(data) {
     await axios.post(
       `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
       {
-        content: `⚠️ Por favor selecciona una opción válida, elige el número del 1 al 5 correspondiente a tu EPS:\n
+        content: `⚠️ Por favor selecciona una opción válida, digita un número del 1 al 5 correspondiente a tu EPS:\n
 1️⃣ Comfenalco
 2️⃣ Coosalud
 3️⃣ SOS
