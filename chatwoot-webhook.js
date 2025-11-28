@@ -21,19 +21,14 @@ const EPS_TEAMS = {
 // Webhook endpoint
 app.post('/chatwoot-webhook', async (req, res) => {
   try {
-    const { event, conversation, message_type } = req.body;
+    const { event, message_type } = req.body;
 
-    // 1. Detectar nueva conversación
-    if (event === 'conversation_created') {
-      await sendWelcomeMessage(req.body);
-    }
-
-    // 2. Detectar respuesta del cliente
+    // 1. Detectar respuesta del cliente
     if (event === 'message_created' && message_type === 'incoming') {
       await assignToTeam(req.body);
     }
 
-    // 3. Detectar cierre de conversación
+    // 2. Detectar cierre de conversación
     if (event === 'conversation_resolved') {
       await sendClosingMessage(req.body);
     }
@@ -44,31 +39,6 @@ app.post('/chatwoot-webhook', async (req, res) => {
     res.status(500).send('Error');
   }
 });
-
-// Enviar mensaje de bienvenida
-async function sendWelcomeMessage(data) {
-  const conversationId = data.conversation.id;
-
-  const message = `
-🌟 ¡Hola! Bienvenido(a) a Clínica Fidem.
-
-Por favor, selecciona tu EPS para una atención personalizada:
-
-1️⃣ Comfenalco  
-2️⃣ Coosalud  
-3️⃣ SOS  
-4️⃣ Salud Total  
-5️⃣ Otro / Particular  
-
-⏳ Uno de nuestros agentes te atenderá muy pronto.
-  `;
-
-  await axios.post(
-    `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
-    { content: message },
-    { headers: { 'api_access_token': API_KEY } }
-  );
-}
 
 // Memoria temporal
 const assignedConversations = new Set();
