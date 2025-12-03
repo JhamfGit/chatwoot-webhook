@@ -107,17 +107,19 @@ async function assignToTeam(data) {
   // Si NO envió número válido → mostrar menú
   if (!option) {
     await axios.post(
-      `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
-      {
-        content: `Recuerda!! lo primero es definir tu EPS!! digita el número del 1 al 5 correspondiente!:\n
+  `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
+  {
+    content: `🌟 ¡Hola! Bienvenido(a) a Clínica Fidem.
+Por favor, digita el numero de tu EPS para una atención personalizada:
+
 1️⃣ Comfenalco
 2️⃣ Coosalud
 3️⃣ SOS
 4️⃣ Salud Total
 5️⃣ Particular / Otro`
-      },
-      { headers: { 'api_access_token': API_KEY } }
-    );
+  },
+  { headers: { 'api_access_token': API_KEY } }
+);
 
     return;
   }
