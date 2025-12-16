@@ -18,12 +18,59 @@ const EPS_TEAMS = {
   '5': { name: 'Particular', teamId: 7, label: 'particular' }
 };
 
+// ============================================
+// FUNCIÓN PARA VALIDAR HORARIO DE ATENCIÓN
+// ============================================
+function isWithinBusinessHours() {
+  // Obtener fecha y hora en Bogotá (UTC-5)
+  const now = new Date();
+  const bogotaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  
+  const day = bogotaTime.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  const hour = bogotaTime.getHours();
+  
+  console.log(`🕐 Hora actual en Bogotá: ${bogotaTime.toLocaleString('es-CO')} (Día: ${day}, Hora: ${hour})`);
+  
+  // Domingo (0) - No atender
+  if (day === 0) {
+    console.log('🚫 Domingo - Fuera de horario');
+    return false;
+  }
+  
+  // Sábado (6) - 8 AM a 11 AM
+  if (day === 6) {
+    if (hour >= 8 && hour < 11) {
+      console.log('✅ Sábado - Dentro del horario (8 AM - 11 AM)');
+      return true;
+    }
+    console.log('🚫 Sábado - Fuera de horario (Solo 8 AM - 11 AM)');
+    return false;
+  }
+  
+  // Lunes a Viernes (1-5) - 8 AM a 5 PM
+  if (hour >= 8 && hour < 17) {
+    console.log('✅ Lunes a Viernes - Dentro del horario (8 AM - 5 PM)');
+    return true;
+  }
+  
+  console.log('🚫 Lunes a Viernes - Fuera de horario (Solo 8 AM - 5 PM)');
+  return false;
+}
+
 // Webhook endpoint
 app.post('/chatwoot-webhook', async (req, res) => {
   try {
     const { event, message_type } = req.body;
 
     console.log(`📨 Evento recibido: ${event}, tipo: ${message_type}`);
+
+    // ============================================
+    // VALIDAR HORARIO ANTES DE PROCESAR
+    // ============================================
+    if (!isWithinBusinessHours()) {
+      console.log('⏰ Evento ignorado - Fuera del horario de atención');
+      return res.status(200).send('OK - Fuera de horario');
+    }
 
     // 1. Detectar respuesta del cliente
     if (event === 'message_created' && message_type === 'incoming') {
@@ -107,9 +154,9 @@ async function assignToTeam(data) {
   // Si NO envió número válido → mostrar menú
   if (!option) {
     await axios.post(
-  `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
-  {
-    content: `🌟 ¡Hola! Bienvenido(a) a Clínica Fidem.
+      `${CHATWOOT_URL}/api/v1/accounts/${ACCOUNT_ID}/conversations/${conversationId}/messages`,
+      {
+        content: `🌟 ¡Hola! Bienvenido(a) a Clínica Fidem.
 Por favor, digita el numero de tu EPS para una atención personalizada:
 
 1️⃣ Comfenalco
@@ -117,9 +164,9 @@ Por favor, digita el numero de tu EPS para una atención personalizada:
 3️⃣ SOS
 4️⃣ Salud Total
 5️⃣ Particular / Otro`
-  },
-  { headers: { 'api_access_token': API_KEY } }
-);
+      },
+      { headers: { 'api_access_token': API_KEY } }
+    );
 
     return;
   }
@@ -182,4 +229,8 @@ async function sendClosingMessage(data) {
 app.listen(3000, () => {
   console.log('✅ Webhook server running on port 3000');
   console.log('📍 Endpoint: POST /chatwoot-webhook');
+  console.log('⏰ Horarios de atención:');
+  console.log('   • Lunes a Viernes: 8:00 AM - 5:00 PM');
+  console.log('   • Sábado: 8:00 AM - 11:00 AM');
+  console.log('   • Domingo: Cerrado');
 });
